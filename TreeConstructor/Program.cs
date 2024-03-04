@@ -5,125 +5,60 @@ namespace TreeConstructor;
 
 public class ProgramTreeConstructor
 {
+    ///* <summary>
+    /// * Binary Tree constructor
+    /// constraints
+    /// -------------------
+    /// 1. Parents have at most 2 children
+    /// 2. Each child has at most one parent
+    /// 3. Iterate across strArr and check all conditions remain true
+    /// </summary>
+    /// <param name="strArr"></param>
+    /// <returns></returns>
     public static bool TreeConstructor(string[] strArr)
     {
-        Node root = null;
-        int[] values;
-        List<Node> orphans = new List<Node>();
-        /// 
-        /// 4
-        /// 2
-        /// 1   7
-        ///     5
-        ///     9
-        /// 
-        ///
+        SortedList<int, List<int>> parents = new SortedList<int, List<int>>();
+        SortedList<int, int> children = new SortedList<int, int>();
+
         foreach (string str in strArr)
         {
-            values = Regex.Replace(str, "[()]", string.Empty).Split(',').Select(c =>
+            var values = Regex.Replace(str, "[()]", string.Empty).Split(',').Select(c =>
             {
                 return int.Parse(c);
             }).ToArray();
 
-            int parent = values[1];
             int child = values[0];
-            if (root == null)
+            int parent = values[1];
+
+            if (!parents.ContainsKey(parent))
             {
-                root = new Node(parent, child);
+                parents[parent] = new List<int>() { child };
             }
             else
             {
-                bool res = root.Insert(parent, child, ref root);
-                if(res == false)
-                {
-                    // Add to orphanList
-                    orphans.Add(new Node(parent, child));
-                    return res;
-                }
+                parents[parent].Add(child);
             }
-            
+
+            if (parents[parent].Count > 2)
+            {
+                // The parent contains more than two children
+                return false;
+            }
+
+            // Check if the child only has one parent
+            if (children.ContainsKey(child))
+            {
+                // A previous child was already processed and it breaks the rule that a child only should have one parent
+                return false;
+            }
+            else
+            {
+                children.Add(child, parent);
+            }
         }
 
-        return true;
-
-    }
-
-    
-
-    class Node
-    {
-        public Node(int value)
-        {
-            this.Value = value;
-            this.Left = null;
-            this.Right = null;
-        }
-
-        public Node(int value, int childValue)
-        {
-            this.Value = value;
-            this.Left = new Node(childValue);
-            this.Right = null;
-        }
-
-        public int Value { get; set; }
-        public Node Left { get; set; }
-        public Node Right { get; set; }
-
-        public bool Insert(int parent, int childValue, ref Node root)
-        {
-            Node parentNode = DeepSearch(parent);
-            if(parentNode == null)
-            {
-                Node childNode = DeepSearch(childValue);
-                if(childNode == null)
-                {
-                    return false;
-                }
-
-                Node newRoot = new Node(parent);
-                newRoot.Left = childNode;
-                root = newRoot;
-                return true;
-            }
-
-            if(parentNode.Left == null)
-            {
-                parentNode.Left = new Node(childValue);
-                return true;
-            }
-
-            if(parentNode.Right == null)
-            {
-                parentNode.Right = new Node(childValue);
-                return true;
-            }
-
-            return false;
-        }
-
-        public Node DeepSearch(int searchingValue)
-        {
-            if(searchingValue == Value)
-            {
-                return this;
-            }
-
-            Node leftNode = null;
-            Node rightNode = null;
-
-            if (Left != null)
-            {
-                leftNode = Left.DeepSearch(searchingValue);
-            }
-
-            if (Right != null)
-            {
-                rightNode = Right.DeepSearch(searchingValue);
-            }
-
-            return leftNode ?? rightNode;
-        }
+        // everything was proccessed and passes the constraints for a binary tree
+         return true;
     }
 
     static void Main()
